@@ -33,13 +33,13 @@ lane2 = pygame.Rect((LANE2_X-15, 0, 30, HEIGHT))
 lane3 = pygame.Rect((LANE3_X-15, 0, 30, HEIGHT))
 LANES_POS_LIST = [LANE1_X, LANE2_X, LANE3_X]
 
-#moving object (maybe a ciclist)
-CICLIST_SPEED = 10
-CICLIST_SIZE_X, CICLIST_SIZE_Y = 50, 120
-CICLIST_COLOR = (0, 0, 255)
-ciclist_timer = 1
-ciclist_changer = False
-ciclist = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-CICLIST_SIZE_X/2, HEIGHT-10, CICLIST_SIZE_X, CICLIST_SIZE_Y))
+#moving object (maybe a cyclist)
+CYCLIST_SPEED = 10
+CYCLIST_SIZE_X, CYCLIST_SIZE_Y = 50, 120
+CYCLIST_COLOR = (0, 0, 255)
+cyclist_timer = 1
+cyclist_changer = False
+cyclist = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-CYCLIST_SIZE_X/2, HEIGHT-10, CYCLIST_SIZE_X, CYCLIST_SIZE_Y))
 
 #hard coded FPS so the game runs at the same speed in all machines... unless the machine can't run <GAME_NAME HERE> at 60 fps. In that case, it'll go slower.
 FPS = 60
@@ -50,8 +50,8 @@ def draw_window():
     global is_jumping
     global player_color
     global time_jump
-    global ciclist_changer
-    global ciclist_timer
+    global cyclist_changer
+    global cyclist_timer
     #WIN.fill should be the first thing here. ALWAYS. Change it if you wanna know why.
     WIN.fill((0, 0, 0))
 
@@ -69,23 +69,23 @@ def draw_window():
             player.y+= 30
             is_jumping = False
 
-    #moves the ciclist
-    if ciclist.y >= HEIGHT:
-        ciclist_changer = True
-    if ciclist_changer == True:
-        if ciclist_timer == 0:
-            ciclist_timer = numpy.random.randint(70)
-            ciclist.x = numpy.random.choice(LANES_POS_LIST)-CICLIST_SIZE_X/2
-            ciclist.y = -CICLIST_SIZE_Y
-            ciclist_changer = False
+    #moves the cyclist
+    if cyclist.y >= HEIGHT:
+        cyclist_changer = True
+    if cyclist_changer == True:
+        if cyclist_timer == 0:
+            cyclist_timer = numpy.random.randint(70)
+            cyclist.x = numpy.random.choice(LANES_POS_LIST)-CYCLIST_SIZE_X/2
+            cyclist.y = -CYCLIST_SIZE_Y
+            cyclist_changer = False
         else:
-            ciclist_timer -= 1
-    ciclist.y += CICLIST_SPEED
+            cyclist_timer -= 1
+    cyclist.y += CYCLIST_SPEED
 
     pygame.draw.rect(WIN, (125, 125, 125), lane1)
     pygame.draw.rect(WIN, (125, 125, 125), lane2)
     pygame.draw.rect(WIN, (125, 125, 125), lane3)
-    pygame.draw.rect(WIN, CICLIST_COLOR, ciclist)
+    pygame.draw.rect(WIN, CYCLIST_COLOR, cyclist)
     pygame.draw.rect(WIN, player_color, player)
 
     #collision
