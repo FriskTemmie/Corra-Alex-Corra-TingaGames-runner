@@ -230,7 +230,8 @@ def pause():
     while run:
         clock.tick(FPS)
 
-        button_NB.draw(surface)
+        surface.fill(EMPTY)
+        button_start.draw(surface)
         
         if button_start.clicked:
             game_main()
