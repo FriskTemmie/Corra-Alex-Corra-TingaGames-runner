@@ -6,7 +6,6 @@ import spritesheet, button
 
 #oy mate, can you pass me the bottle o' water innit?
 pygame.init()
-pygame.freetype
 
 
 #screen
@@ -17,12 +16,15 @@ pygame.display.set_caption("Corra, Alex, Corra")
 
 
 #miscellaneous 
-GAME_FONT = pygame.freetype.SysFont('Mono', 32)
 last_update = pygame.time.get_ticks()
 BLACK = (0, 0, 0)
 EMPTY = (0,0,0,0)
-background_image_temp = spritesheet.SpriteSheet(pygame.image.load('sprites/background/placeholder.png').convert_alpha())
-BACKGROUND = background_image_temp.get_image(0, 420, 240, 4, BLACK)
+
+
+#background
+background_image_temp = spritesheet.SpriteSheet(pygame.image.load('sprites/background/background.png').convert_alpha())
+BACKGROUND = background_image_temp.get_image(0, 4200, 108000, 0.4, BLACK)
+background_pos_bottom = pygame.Rect((0, HEIGHT, 1, 1))
 
 
 #"lanes"... oh boy.
@@ -55,7 +57,7 @@ base_player_sprites_right = spritesheet.SpriteSheet(pygame.image.load('sprites/p
 base_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/player/base/sprite_sheet_base_diagonal_L.png').convert_alpha())
 base_player_sprites_jumping = spritesheet.SpriteSheet(pygame.image.load('sprites/player/base/sprite_sheet_base_jumping.png').convert_alpha())
 
-temp_undertale_ref = button.Button(WIDTH/2-289, HEIGHT/2-76, (pygame.image.load('sprites/player/Fem/AMOTHERFUCKERUNDERTALEREFERENCE.png').convert_alpha()), 1)
+#temp_undertale_ref = button.Button(WIDTH/2-289, HEIGHT/2-76, (pygame.image.load('sprites/player/Fem/AMOTHERFUCKERUNDERTALEREFERENCE.png').convert_alpha()), 1) #this doesn't even work, in case someone is reading the code.
 #F_player_sprites_running = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F.png').convert_alpha())
 #F_player_sprites_right = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_R.png').convert_alpha())
 #F_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_L.png').convert_alpha())
@@ -84,13 +86,22 @@ player_animation_current_frame = 0
 player_current_animation = player_animation_running
 
 
-#moving object (maybe a cyclist)
+#enemies/obstacles
+#cyclist
 CYCLIST_SPEED = 10
 CYCLIST_SIZE_X, CYCLIST_SIZE_Y = 50, 120
-CYCLIST_COLOR = (0, 0, 255)
+CYCLIST_COLOR = (255, 0, 0)
 cyclist_timer = 1
 cyclist_changer = False
 cyclist = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-CYCLIST_SIZE_X/2, HEIGHT-10, CYCLIST_SIZE_X, CYCLIST_SIZE_Y))
+
+#dog
+DOG_SPEED = 7
+DOG_SIZE_X, DOG_SIZE_Y = 50, 70
+DOG_COLOR = (155, 0, 0)
+dog_timer = 1
+dog_changer = False
+dog = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2, HEIGHT-10, DOG_SIZE_X, DOG_SIZE_Y))
 
 
 #buttons
@@ -125,6 +136,9 @@ def death():
     global cyclist_timer
     global cyclist_changer
     global cyclist
+    global dog_timer
+    global dog_changer
+    global dog
 
     WIN.fill(BLACK)
 
@@ -140,9 +154,13 @@ def death():
     player_animation_jumping = []
     player_animation_current_frame = 0
     player = pygame.Rect((PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_SIZE_X, PLAYER_SIZE_Y))
+    background_pos_bottom.y = HEIGHT
     cyclist_timer = 1
     cyclist_changer = False
     cyclist = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-CYCLIST_SIZE_X/2, HEIGHT-10, CYCLIST_SIZE_X, CYCLIST_SIZE_Y))
+    dog_timer = 1
+    dog_changer = False
+    dog = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2, HEIGHT-10, DOG_SIZE_X, DOG_SIZE_Y))
 
     main_menu()
 
@@ -264,6 +282,8 @@ def game_draw_window():
     global time_jump
     global cyclist_changer
     global cyclist_timer
+    global dog_changer
+    global dog_timer
     global player_animation_current_frame
     global last_update
     global current_time
@@ -306,10 +326,10 @@ def game_draw_window():
             player_current_animation = player_animation_running
 
 
-    #moves the cyclist
+    #moves the enemies/obstacles
+    #cyclist
     if cyclist.y >= HEIGHT:
         cyclist_changer = True
-
     if cyclist_changer == True:
         if cyclist_timer == 0:
             cyclist_timer = numpy.random.randint(70)
@@ -318,8 +338,20 @@ def game_draw_window():
             cyclist_changer = False
         else:
             cyclist_timer -= 1
-        
     cyclist.y += CYCLIST_SPEED
+
+    #dog
+    if dog.y >= HEIGHT:
+        dog_changer = True
+    if dog_changer == True:
+        if dog_timer == 0:
+            dog_timer = numpy.random.randint(120)
+            dog.x = numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2
+            dog.y = -DOG_SIZE_Y
+            dog_changer = False
+        else:
+            dog_timer -= 1
+    dog.y += DOG_SPEED
 
 
     #updates player animation
@@ -335,18 +367,25 @@ def game_draw_window():
         last_update = current_time
 
 
+    #moves the background
+    background_pos_bottom.y += 4 # --> player speed should be considered as 4 <--
+
     #draw the stuff on the screen
-    WIN.blit(BACKGROUND, (0, 0))
+    WIN.blit(BACKGROUND, (0, background_pos_bottom.y - 43200))
     #pygame.draw.rect(WIN, (125, 125, 125), lane1)
     #pygame.draw.rect(WIN, (125, 125, 125), lane2)
     #pygame.draw.rect(WIN, (125, 125, 125), lane3)
     pygame.draw.rect(WIN, CYCLIST_COLOR, cyclist)
+    pygame.draw.rect(WIN, DOG_COLOR, dog)
     pygame.draw.rect(surface, (100, 100, 100, 0), player)
     WIN.blit(player_current_animation[player_animation_current_frame], ((player.x - 88), (player.y - 161)))
+    pygame.draw.rect(WIN, (0, 0, 0), background_pos_bottom)
 
 
     #collisions
     if pygame.Rect.colliderect(player, cyclist) and not is_jumping:
+        death()
+    elif pygame.Rect.colliderect(player, dog) and not is_jumping:
         death()
 
 
