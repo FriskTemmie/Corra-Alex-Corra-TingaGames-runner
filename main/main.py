@@ -18,7 +18,7 @@ pygame.display.set_caption("Corra, Alex, Corra")
 #miscellaneous 
 last_update = pygame.time.get_ticks()
 BLACK = (0, 0, 0)
-EMPTY = (0,0,0,0)
+EMPTY = (0, 0, 0, 0)
 
 
 #background
@@ -74,7 +74,6 @@ NB_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/play
 NB_player_sprites_jumping = spritesheet.SpriteSheet(pygame.image.load('sprites/player/NB/sprite_sheet_alex_NB_jumping.png').convert_alpha())
 
 
-
 #player animation
 player_animation_running = []
 player_animation_right = []
@@ -102,6 +101,29 @@ DOG_COLOR = (155, 0, 0)
 dog_timer = 1
 dog_changer = False
 dog = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2, HEIGHT-10, DOG_SIZE_X, DOG_SIZE_Y))
+
+#sitting
+SITTING_SPEED = 4
+#remember to make the sitting guy only appears on the left and right lanes. Don't make him get run over by the cars, damn it.
+#also, make a check to see if the other obstacles that are moving (moving from the player point of view, not actually moving, since everything but the player is) are going to spawn in the same lane as a sitting guy, and if they are, make them go to another lane. You can either make an if statement and just change the LANES_POS_LIST index to +1 or =0 (in case it was 2) or use an while. Whatever you find it best, future Frisk.
+
+#sheets and animation
+#cyclist
+base_obstacle_sprites_cyclist = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_bicycle.png').convert_alpha())
+npc_animation_cyclist = []
+
+#dog
+base_obstacle_sprites_dog = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_dog.png').convert_alpha())
+npc_animation_dog = []
+
+#sitting
+base_obstacle_sprites_sitting = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_sitting.png').convert_alpha())
+npc_animation_sitting = []
+
+for x in range(PLAYER_ANIMATION_STEPS):
+    npc_animation_cyclist.append(base_obstacle_sprites_cyclist.get_image(x, 60, 60, 4, BLACK))
+    npc_animation_dog.append(base_obstacle_sprites_dog.get_image(x, 60, 60, 4, BLACK))
+    npc_animation_sitting.append(base_obstacle_sprites_cyclist.get_image(x, 60, 60, 4, BLACK))
 
 
 #buttons
