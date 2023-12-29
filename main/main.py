@@ -17,6 +17,10 @@ pygame.display.set_caption("Corra, Alex, Corra")
 
 #miscellaneous 
 last_update = pygame.time.get_ticks()
+time_initial = 150 #150000
+time_left = time_initial
+time_lost = 0
+cutscene_animation = []
 BLACK = (0, 0, 0)
 EMPTY = (0, 0, 0, 0)
 
@@ -39,8 +43,10 @@ LANES_POS_LIST = [LANE1_X, LANE2_X, LANE3_X]
 #player
 PLAYER_INITIAL_SPEED = WIDTH*1/96
 player_speed = 0
+player_bonus_speed = 0
 PLAYER_SIZE_X, PLAYER_SIZE_Y = 67, 50
 PLAYER_SIZE_X_HALF = PLAYER_SIZE_X/2
+gender = ""
 
 PLAYER_INITIAL_X, PLAYER_INITIAL_Y = (LANE2_X - PLAYER_SIZE_X_HALF), (HEIGHT - PLAYER_SIZE_Y*1.25)
 player = pygame.Rect((PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_SIZE_X, PLAYER_SIZE_Y))
@@ -48,8 +54,10 @@ player = pygame.Rect((PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_SIZE_X, PLAYER_
 is_jumping = False
 time_jump = 0
 
-is_player_selected = False
+invulnerability = False
+invulnerability_frames = 0
 
+is_player_selected = False
 
 #player sheets
 base_player_sprites_running = spritesheet.SpriteSheet(pygame.image.load('sprites/player/base/sprite_sheet_base.png').convert_alpha())
@@ -58,10 +66,10 @@ base_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/pl
 base_player_sprites_jumping = spritesheet.SpriteSheet(pygame.image.load('sprites/player/base/sprite_sheet_base_jumping.png').convert_alpha())
 
 #temp_undertale_ref = button.Button(WIDTH/2-289, HEIGHT/2-76, (pygame.image.load('sprites/player/Fem/AMOTHERFUCKERUNDERTALEREFERENCE.png').convert_alpha()), 1) #this doesn't even work, in case someone is reading the code.
-#F_player_sprites_running = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F.png').convert_alpha())
-#F_player_sprites_right = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_R.png').convert_alpha())
-#F_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_L.png').convert_alpha())
-#F_player_sprites_jumping = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_jumping.png').convert_alpha())
+F_player_sprites_running = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F.png').convert_alpha())
+F_player_sprites_right = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_R.png').convert_alpha())
+F_player_sprites_left = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_diagonal_L.png').convert_alpha())
+F_player_sprites_jumping = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/sprite_sheet_alex_F_jumping.png').convert_alpha())
 
 M_player_sprites_running = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Masc/sprite_sheet_Alex_M.png').convert_alpha())
 M_player_sprites_right = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Masc/sprite_sheet_alex_M_diagonal_R.png').convert_alpha())
@@ -102,32 +110,23 @@ dog_timer = 1
 dog_changer = False
 dog = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2, HEIGHT-10, DOG_SIZE_X, DOG_SIZE_Y))
 
-#sitting
-SITTING_SPEED = 4
-#remember to make the sitting guy only appears on the left and right lanes. Don't make him get run over by the cars, damn it.
-#also, make a check to see if the other obstacles that are moving (moving from the player point of view, not actually moving, since everything but the player is) are going to spawn in the same lane as a sitting guy, and if they are, make them go to another lane. You can either make an if statement and just change the LANES_POS_LIST index to +1 or =0 (in case it was 2) or use an while. Whatever you find it best, future Frisk.
-
 #sheets and animation
 #cyclist
-base_obstacle_sprites_cyclist = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_bicycle.png').convert_alpha())
+obstacle_sprites_cyclist = spritesheet.SpriteSheet(pygame.image.load('sprites/NPCs/obstacle/sheet_obstacle_bicycle.png').convert_alpha())
 npc_animation_cyclist = []
 
 #dog
-base_obstacle_sprites_dog = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_dog.png').convert_alpha())
+obstacle_sprites_dog = spritesheet.SpriteSheet(pygame.image.load('sprites/NPCs/obstacle/sheet_obstacle_dog.png').convert_alpha())
 npc_animation_dog = []
 
-#sitting
-base_obstacle_sprites_sitting = spritesheet.SpriteSheet(pygame.image.load('sprites\NPCs\base\sheet_base_npc_sitting.png').convert_alpha())
-npc_animation_sitting = []
-
 for x in range(PLAYER_ANIMATION_STEPS):
-    npc_animation_cyclist.append(base_obstacle_sprites_cyclist.get_image(x, 60, 60, 4, BLACK))
-    npc_animation_dog.append(base_obstacle_sprites_dog.get_image(x, 60, 60, 4, BLACK))
-    npc_animation_sitting.append(base_obstacle_sprites_cyclist.get_image(x, 60, 60, 4, BLACK))
+    npc_animation_cyclist.append(obstacle_sprites_cyclist.get_image(x, 60, 60, 4, BLACK))
+    npc_animation_dog.append(obstacle_sprites_dog.get_image(x, 60, 60, 4, BLACK))
 
 
 #buttons
-button_start = button.Button(WIDTH/2-82, HEIGHT/2+200, (pygame.image.load('sprites/buttons/button_resume.png').convert_alpha()), 1)
+button_resume = button.Button(82, HEIGHT/2+200, (pygame.image.load('sprites/buttons/button_resume.png').convert_alpha()), 1)
+button_menu = button.Button(82, HEIGHT/2+300, (pygame.image.load('sprites/buttons/button_menu.png').convert_alpha()), 1)
 
 button_F = button.Button(WIDTH/2-608, HEIGHT/2-82, (pygame.image.load('sprites/buttons/button_F.png').convert_alpha()), 1)
 ela = button.Button(WIDTH/2-608, HEIGHT/2-226, (pygame.image.load('sprites/buttons/ela.png').convert_alpha()), 1)
@@ -142,8 +141,114 @@ elu = button.Button(WIDTH/2+202, HEIGHT/2-226, (pygame.image.load('sprites/butto
 #hard coded FPS so the game runs at the same speed in all machines... unless the machine can't run Corra, Alex, Corra at 60 fps. In that case, it'll go slower.
 FPS = 60
 
+
+def game_end(win):
+    global last_update
+    global button_menu
+
+    animation_current_frame = 0
+    test_for_first_time = True
+
+    cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_skill_issue.png').convert_alpha())
+    cutscene_animation = []
+
+
+    if not win:
+        ANIMATION_STEPS = 33
+        button_menu = button.Button(WIDTH/2-82, HEIGHT/2+200, (pygame.image.load('sprites/buttons/button_menu.png').convert_alpha()), 1)
+
+        #load the losing animation
+        cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_skill_issue.png').convert_alpha())
+        for x in range(ANIMATION_STEPS):
+            cutscene_animation.append(cutscene_sprite.get_image(x, 420, 240, 4, BLACK))
+    else:
+        ANIMATION_STEPS = 49
+        button_menu = button.Button(WIDTH*3/4-220, HEIGHT/2+145, (pygame.image.load('sprites/buttons/button_menu.png').convert_alpha()), 1)
+
+        if gender == "F":
+            #load the female Alex winning animation
+            cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_win_F.png').convert_alpha())
+            for x in range(ANIMATION_STEPS):
+                cutscene_animation.append(cutscene_sprite.get_image(x, 420, 240, 4, BLACK))
+        elif gender == "M":
+            #load the male Alex winning animation
+            cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_win_M.png').convert_alpha())
+            for x in range(ANIMATION_STEPS):
+                cutscene_animation.append(cutscene_sprite.get_image(x, 420, 240, 4, BLACK))
+        elif gender == "NB":
+            #load the enby Alex winning animation
+            cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_win_NB.png').convert_alpha())
+            for x in range(ANIMATION_STEPS):
+                cutscene_animation.append(cutscene_sprite.get_image(x, 420, 240, 4, BLACK))
+    
+    run = True
+    while run:
+        WIN.fill(BLACK)
+
+        #updates the GIF
+        current_time = pygame.time.get_ticks()
+        if current_time - last_update >= PLAYER_ANIMATION_SPEED:
+            if animation_current_frame < ANIMATION_STEPS-1:
+                animation_current_frame += 1
+            else:
+                animation_current_frame = 0
+                if test_for_first_time and not win:
+                    cutscene_animation = []
+                    ANIMATION_STEPS = 6
+                    cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/cutscenes/sheets/sprite_sheet_gameover.png').convert_alpha())
+                    for x in range(ANIMATION_STEPS):
+                        cutscene_animation.append(cutscene_sprite.get_image(x, 420, 240, 4, BLACK))
+                elif test_for_first_time and win:
+                    cutscene_animation = []
+                    ANIMATION_STEPS = 0
+                    if gender == "F":
+                        #load the female Alex winning screen
+                        cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Fem/win_screen_F.png').convert_alpha())
+                        cutscene_animation.append(cutscene_sprite.get_image(0, 1680, 945, 1, BLACK))
+                    elif gender == "M":
+                        #load the male Alex winning screen
+                        cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/player/Masc/win_screen_M.png').convert_alpha())
+                        cutscene_animation.append(cutscene_sprite.get_image(0, 1680, 945, 1, BLACK))
+                    elif gender == "NB":
+                        #load the enby Alex winning screen
+                        cutscene_sprite = spritesheet.SpriteSheet(pygame.image.load('sprites/player/NB/win_screen_NB.png').convert_alpha())
+                        cutscene_animation.append(cutscene_sprite.get_image(0, 1680, 945, 1, BLACK))
+                
+                pygame.mouse.set_visible(True)
+                test_for_first_time = False
+            
+            last_update = current_time
+
+        #runs through all pygame events
+        for event in pygame.event.get():
+            #checks if the screen should be closed
+            if event.type == pygame.QUIT:
+                #stops the while
+                run = False
+                pygame.quit()
+        
+
+        if button_menu.clicked:
+            death()
+
+
+        #actually updates the window. HAVE to be the last thing here.
+        if test_for_first_time:
+            WIN.blit(cutscene_animation[animation_current_frame], (0, 0))
+        elif win and not test_for_first_time:
+            WIN.blit(cutscene_animation[0], (0, 0))
+            button_menu.draw(WIN)
+        elif not win:
+            WIN.blit(cutscene_animation[animation_current_frame], (0, 0))
+            button_menu.draw(WIN)
+
+        pygame.display.update()
+
+
 def death():
     global last_update
+    global time_left
+    global time_lost
     global current_lane
     global is_jumping
     global time_jump
@@ -153,6 +258,7 @@ def death():
     global player_animation_jumping
     global player_animation_current_frame
     global player_speed
+    global player_bonus_speed
     global is_player_selected
     global player
     global cyclist_timer
@@ -161,20 +267,29 @@ def death():
     global dog_timer
     global dog_changer
     global dog
+    global invulnerability
+    global invulnerability_frames
+    global button_menu
+    global button_F
+    global button_M
+    global button_NB
 
     WIN.fill(BLACK)
 
     last_update = pygame.time.get_ticks()
+    time_left = time_initial
+    time_lost = 0
     current_lane = 2
     is_jumping = False
     time_jump = 0
     player_speed = 0
+    player_bonus_speed = 0
     is_player_selected = False
     player_animation_running = []
     player_animation_right = []
     player_animation_left = []
     player_animation_jumping = []
-    player_animation_current_frame = 0
+    player_animation_current_frame = 5
     player = pygame.Rect((PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_SIZE_X, PLAYER_SIZE_Y))
     background_pos_bottom.y = HEIGHT
     cyclist_timer = 1
@@ -183,6 +298,13 @@ def death():
     dog_timer = 1
     dog_changer = False
     dog = pygame.Rect((numpy.random.choice(LANES_POS_LIST)-DOG_SIZE_X/2, HEIGHT-10, DOG_SIZE_X, DOG_SIZE_Y))
+    invulnerability = False
+    invulnerability_frames = 0
+    button_menu = button.Button(82, HEIGHT/2+300, (pygame.image.load('sprites/buttons/button_menu.png').convert_alpha()), 1)
+    button_menu.clicked = False
+    button_F.clicked = False
+    button_M.clicked = False
+    button_NB.clicked = False
 
     main_menu()
 
@@ -193,6 +315,7 @@ def main_menu():
     global player_animation_left
     global player_animation_jumping
     global is_player_selected
+    global gender
 
     pygame.mouse.set_visible(True)
     clock = pygame.time.Clock()
@@ -206,7 +329,7 @@ def main_menu():
         surface.fill(EMPTY)
 
         if is_player_selected:
-            button_start.draw(surface)
+            button_resume.draw(surface)
         else:
             ela.draw(surface)
             button_F.draw(surface)
@@ -217,13 +340,15 @@ def main_menu():
         
         if button_F.clicked:
             pass
-            #for x in range(PLAYER_ANIMATION_STEPS):
-                #player_animation_running.append(F_player_sprites_running.get_image(x, 60, 60, 4, BLACK))
-                #player_animation_right.append(F_player_sprites_right.get_image(x, 60, 60, 4, BLACK))
-                #player_animation_left.append(F_player_sprites_left.get_image(x, 60, 60, 4, BLACK))
-                #player_animation_jumping.append(F_player_sprites_jumping.get_image(x, 60, 60, 4, BLACK))
+            for x in range(PLAYER_ANIMATION_STEPS):
+                player_animation_running.append(F_player_sprites_running.get_image(x, 60, 60, 4, BLACK))
+                player_animation_right.append(F_player_sprites_right.get_image(x, 60, 60, 4, BLACK))
+                player_animation_left.append(F_player_sprites_left.get_image(x, 60, 60, 4, BLACK))
+                player_animation_jumping.append(F_player_sprites_jumping.get_image(x, 60, 60, 4, BLACK))
 
-            #is_player_selected = True
+            gender = "F"
+            is_player_selected = True
+            game_main()
         elif button_M.clicked:
             for x in range(PLAYER_ANIMATION_STEPS):
                 player_animation_running.append(M_player_sprites_running.get_image(x, 60, 60, 4, BLACK))
@@ -231,6 +356,7 @@ def main_menu():
                 player_animation_left.append(M_player_sprites_left.get_image(x, 60, 60, 4, BLACK))
                 player_animation_jumping.append(M_player_sprites_jumping.get_image(x, 60, 60, 4, BLACK))
 
+            gender = "M"
             is_player_selected = True
             game_main()
         elif button_NB.clicked:
@@ -240,6 +366,7 @@ def main_menu():
                 player_animation_left.append(NB_player_sprites_left.get_image(x, 60, 60, 4, BLACK))
                 player_animation_jumping.append(NB_player_sprites_jumping.get_image(x, 60, 60, 4, BLACK))
             
+            gender = "NB"
             is_player_selected = True
             game_main()
 
@@ -256,10 +383,11 @@ def main_menu():
                 pass
 
 
-        #actually updates the window. HAVE to be the last thing here.\
+        #actually updates the window. HAVE to be the last thing here.
         WIN.blit(surface, (0, 0))
         pygame.display.update()
                     
+
 
 def pause():
     pygame.mouse.set_visible(True)
@@ -271,10 +399,13 @@ def pause():
         clock.tick(FPS)
 
         surface.fill(EMPTY)
-        button_start.draw(surface)
+        button_resume.draw(surface)
+        button_menu.draw(surface)
         
-        if button_start.clicked:
+        if button_resume.clicked:
             game_main()
+        elif button_menu.clicked:
+            death()
 
 
         #runs through all pygame events
@@ -292,14 +423,13 @@ def pause():
                     game_main()
 
 
-        #actually updates the window. HAVE to be the last thing here.\
+        #actually updates the window. HAVE to be the last thing here.
         WIN.blit(surface, (0, 0))
         pygame.display.update()
 
 
 #updates the window
 def game_draw_window():
-    global points
     global is_jumping
     global time_jump
     global cyclist_changer
@@ -309,8 +439,12 @@ def game_draw_window():
     global player_animation_current_frame
     global last_update
     global current_time
+    global time_lost
+    global time_left
     global player_current_animation
     global player_speed
+    global invulnerability
+    global invulnerability_frames
 
     #makes the mouse invisible.
     pygame.mouse.set_visible(False)
@@ -321,7 +455,7 @@ def game_draw_window():
     
     
     #moves the player from one "lane" to another
-    player.x += player_speed
+    player.x += player_speed + player_bonus_speed
     if player.x >= LANE1_X - PLAYER_SIZE_X_HALF and player.x <= LANE1_X - PLAYER_SIZE_X_HALF + PLAYER_INITIAL_SPEED:
         player_speed = 0
         player.x = LANE1_X - PLAYER_SIZE_X_HALF
@@ -360,7 +494,7 @@ def game_draw_window():
             cyclist_changer = False
         else:
             cyclist_timer -= 1
-    cyclist.y += CYCLIST_SPEED
+    cyclist.y += CYCLIST_SPEED + player_bonus_speed
 
     #dog
     if dog.y >= HEIGHT:
@@ -373,11 +507,13 @@ def game_draw_window():
             dog_changer = False
         else:
             dog_timer -= 1
-    dog.y += DOG_SPEED
+    dog.y += DOG_SPEED + player_bonus_speed
 
+
+    #time related stuff
+    current_time = pygame.time.get_ticks()
 
     #updates player animation
-    current_time = pygame.time.get_ticks()
     if current_time - last_update >= PLAYER_ANIMATION_SPEED:
         if player_animation_current_frame < PLAYER_ANIMATION_STEPS-1:
             player_animation_current_frame += 1
@@ -388,31 +524,51 @@ def game_draw_window():
         
         last_update = current_time
 
+        #invulnerability frames
+        if invulnerability:
+            invulnerability_frames += 1
+            if invulnerability_frames >= 10:
+                invulnerability_frames = 0
+                invulnerability = False
+        
+        #timer until the game ends
+        time_left -= 100
+        if time_left <= 0:
+            game_end(True)
+
 
     #moves the background
-    background_pos_bottom.y += 4 # --> player speed should be considered as 4 <--
+    background_pos_bottom.y += 4 + player_bonus_speed # --> player speed should be considered as 4 <--
 
     #draw the stuff on the screen
     WIN.blit(BACKGROUND, (0, background_pos_bottom.y - 43200))
     #pygame.draw.rect(WIN, (125, 125, 125), lane1)
     #pygame.draw.rect(WIN, (125, 125, 125), lane2)
     #pygame.draw.rect(WIN, (125, 125, 125), lane3)
-    pygame.draw.rect(WIN, CYCLIST_COLOR, cyclist)
-    pygame.draw.rect(WIN, DOG_COLOR, dog)
+    pygame.draw.rect(surface, CYCLIST_COLOR, cyclist)
+    WIN.blit(npc_animation_cyclist[player_animation_current_frame], ((cyclist.x - 96), (cyclist.y - 110)))
+    pygame.draw.rect(surface, DOG_COLOR, dog)
+    WIN.blit(npc_animation_dog[player_animation_current_frame], ((dog.x - 96), (dog.y - 150)))
     pygame.draw.rect(surface, (100, 100, 100, 0), player)
     WIN.blit(player_current_animation[player_animation_current_frame], ((player.x - 88), (player.y - 161)))
     pygame.draw.rect(WIN, (0, 0, 0), background_pos_bottom)
 
 
     #collisions
-    if pygame.Rect.colliderect(player, cyclist) and not is_jumping:
-        death()
-    elif pygame.Rect.colliderect(player, dog) and not is_jumping:
-        death()
+    if pygame.Rect.colliderect(player, cyclist) and not invulnerability:
+        time_lost += 2
+        print(time_lost)
+        invulnerability = True
 
-
-    #points
-    #GAME_FONT.render_to(WIN, (WIDTH/2-25, 50), f'{player_points} | {player2_points}', (255, 255, 255))
+        if time_lost >= time_initial/14000:
+            game_end(False)
+    elif pygame.Rect.colliderect(player, dog) and not is_jumping and not invulnerability:
+        time_lost += 4
+        print(time_lost)
+        invulnerability = True
+        
+        if time_lost >= time_initial/14000:
+            game_end(False)
 
 
     #actually updates the window. HAVE to be the last thing here.
