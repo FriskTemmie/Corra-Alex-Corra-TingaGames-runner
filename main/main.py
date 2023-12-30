@@ -17,7 +17,7 @@ pygame.display.set_caption("Corra, Alex, Corra")
 
 #miscellaneous 
 last_update = pygame.time.get_ticks()
-time_initial = 150 #150000
+time_initial = 150000 #150000
 time_left = time_initial
 time_lost = 0
 cutscene_animation = []
